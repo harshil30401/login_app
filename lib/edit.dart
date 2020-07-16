@@ -1,269 +1,188 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'main.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:login_app/profilepage.dart';
 
-class ProfilePage extends StatelessWidget {
+import 'package:login_app/main.dart';
+class EditProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Profile Page"),
+        title: Text("Edit Profile"),
       ),
-      body: Profile(),
+      body: EditProfile(),
     );
   }
 }
 
-class Profile extends StatefulWidget {
+class EditProfile extends StatefulWidget {
+  final String id;
+  EditProfile({@required this.id});
   @override
-  _ProfileState createState() => _ProfileState();
+  _EditProfileState createState() => _EditProfileState();
 }
 
-class _ProfileState extends State<Profile> {
-  List storedData = ['', ''];
-  var emailID;
-  var userID;
-  var name = 'Your Name';
-  var age = 'Your Age';
-
+class _EditProfileState extends State<EditProfile> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final ageController = TextEditingController();
+  List storedData = ['', '', '', ''];
+  var id;
   @override
   void initState() {
     super.initState();
-    _loadData();
+//    _loadData();
   }
 
   _loadData() async {
-    FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
-
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       storedData = prefs.getStringList('my_string_list_key');
-      emailID = storedData[0];
-      userID = storedData[1];
-      if (emailID == null) {
+      id = storedData[1];
+      if (id == null) {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => LoginPage()),
         );
       }
-      DatabaseReference databaseReference = firebaseDatabase.reference();
-      databaseReference.child(userID).once().then((DataSnapshot dataSnapshot) {
-        setState(() {
-          if (dataSnapshot.value['name'] != '') {
-            name = dataSnapshot.value['name'];
-            age = dataSnapshot.value['age'];
-          }
-        });
-      });
     });
+  }
+
+  void _edit(String name, String age) {
+    if (_formKey.currentState.validate()) {
+      FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
+      DatabaseReference databaseReference =  firebaseDatabase.reference();
+      databaseReference.child(id).set({
+        'name': name,
+        'age': age,
+      }).then((value) {
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text(
+            "Edit Successful",
+          ),
+        ));
+        Navigator.pop(context);
+      }).catchError((onError) {
+        Scaffold.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Edit Unsuccessful",
+            ),
+          ),
+        );
+      });
+    }
+  }
+
+
+  String numberValidator(String value) {
+    if (value == null) {
+      return null;
+    }
+    final n = num.tryParse(value);
+    if (n == null) {
+      return '$value is not a valid number';
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(12),
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-              child: Text(
-                'Profile Page',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 6,
-            child: Card(
-              color: Colors.cyan,
-              child: Container(
-                padding: EdgeInsets.all(20),
-                child: Column(
+    return Scaffold(
+      appBar: AppBar(title: Text("Edit Profile"),),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                const SizedBox(height: 30.0),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    SizedBox(
-                      height: 10,
+                    Text(
+                      "Edit Profile",
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    Image.asset('assets/images.1.png'),
-                    SizedBox(
-                      height: 35,
-                    ),
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 75,
-                          child: Text(
-                            'Email:',
-                            style: TextStyle(
-                                fontSize: 20, color: Color(0xff2b2d42),
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Flexible(
-                          child: Text(
-                            emailID,
-                            style: TextStyle(
-                                fontSize: 20, color: Color(0xff2b2d42), fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 75,
-                          child: Text(
-                            'Name:',
-                            style: TextStyle(
-                                fontSize: 20, color: Color(0xff2b2d42), fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Flexible(
-                          child: Text(
-                            name,
-                            style: TextStyle(
-                                fontSize: 20, color: Color(0xff2b2d42), fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 75,
-                          child: Text(
-                            'Age:',
-                            style: TextStyle(
-                                fontSize: 20, color: Color(0xff2b2d42), fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Flexible(
-                          child: Text(
-                            age,
-                            style: TextStyle(
-                                fontSize: 20, color: Color(0xff2b2d42), fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
+
                   ],
                 ),
-              ),
+                const SizedBox(height: 50.0),
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                  ),
+                  // ignore: missing_return
+                  validator: (String value) {
+                    if(value.length==0){
+                      return 'ADD PROPER NAME';
+                    }else{
+                      return null;
+                    }
+                  },
+                ),
+                const SizedBox(height: 16.0),
+                TextFormField(
+                  controller: ageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Age',
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: numberValidator,
+                  inputFormatters: <TextInputFormatter>[
+                    WhitelistingTextInputFormatter.digitsOnly
+                  ],
+                ),
+                const SizedBox(height: 30.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    RaisedButton(
+                      color: Colors.blue,
+                      padding:
+                      EdgeInsets.symmetric(horizontal: 45, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18.0)
+                      ),
+                      onPressed: () {
+//                        Scaffold.of(context).showSnackBar(
+//                          SnackBar(
+//                            content: Text(
+//                              "Checking",
+//                            ),
+//                          ),
+//                        );
+                        _edit(nameController.text, ageController.text);
+                        Navigator.pop(context);
+
+                      },
+                      child:  Text(
+                        'Done',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white
+                        ),
+                      ),
+                    ),
+
+                  ],
+                ),
+                const SizedBox(height: 30.0),
+              ],
             ),
           ),
-          SizedBox(
-            height: 20,
-          ),
-          Row(
-            children:<Widget> [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  RaisedButton(
-                    color: Colors.blue,
-                    padding: EdgeInsets.symmetric(horizontal: 45, vertical: 15),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => edit()),
-                      );
-                    },
-                    child: const Text(
-                      'Edit Profile',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                ],
-              ),
-              SizedBox(
-                width: 20,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  RaisedButton(
-                    color: Colors.blueAccent,
-                    padding: EdgeInsets.symmetric(horizontal: 45, vertical: 15),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => widget),
-                      );
-                    },
-                    child: const Text(
-                      'Widgets',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                ],
-              ),
-            ],
-          ),
-          Divider(
-            endIndent: 10,
-            indent: 10,
-            height: 30,
-            thickness: 5,
-            color: Colors.black,
-          ),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: RaisedButton(
-                  color: Colors.deepOrange,
-                  padding: EdgeInsets.symmetric(horizontal: 45, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18.0)
-                  ),
-
-                  onPressed: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    prefs.clear();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => widget),
-                    );
-                  },
-
-                  child: const Text(
-                    'Log Out',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                ),
-              ),
-            ],
-          ),
-
-        ],
+        ),
       ),
     );
   }
 
-  edit() {}
-}
 
-class EditProfilePage {
 }

@@ -1,17 +1,12 @@
-import 'package:firebase/src/interop/database_interop.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-
-import 'package:flutter/services.dart';
-
+import 'package:login_app/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase/firebase.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:login_app/main.dart';
+import 'package:login_app/Widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-
-
-
+import 'edit.dart';
 AppBar pageAppBar(String title) {
   return AppBar(
     title: Text(title),
@@ -19,18 +14,8 @@ AppBar pageAppBar(String title) {
 }
 Widget formButton(BuildContext context,
     {IconData iconData, String textData, Function onPressed}) {
-  return RaisedButton(
-    onPressed: onPressed,
-    color: Theme.of(context).accentColor,
-    padding: EdgeInsets.only(
-      top: 8,
-      bottom: 8,
-      left: 48,
-      right: 48,
-    ),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(4),
-    ),
+
+
     child: Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
@@ -44,168 +29,311 @@ Widget formButton(BuildContext context,
         ),
         Text(textData),
       ],
-    ),
-  );
+    );
+
+    return RaisedButton(
+      onPressed: onPressed,
+      color: Theme.of(context).accentColor,
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+
+    );
+
 }
+//class ProfilePage extends StatelessWidget {
+//
+//}
+//  @override
+//  Widget build(BuildContext context) {
+//    return Scaffold(
+//      appBar: AppBar(
+//        title: Text("User Profile"),
+//      ),
+//      body: Profile(),
+//    );
+//  }
+//}
 
 
-class EditProfile extends StatefulWidget {
-  final age;
-  final name;
-  EditProfile({this.name,this.age});
+class Profile extends StatefulWidget {
+  final String user;
+  final String uid;
+  Profile({@required this.user,@required this.uid}):assert(user!=null || uid!=null);
   @override
-  _EditProfileState createState() => _EditProfileState();
+  _ProfileState createState() => _ProfileState();
 }
 
-class _EditProfileState extends State<EditProfile> {
-  FirebaseUser user;
-  String uid;
-  List<String> userData;
+class _ProfileState extends State<Profile> {
+  List<String> userDetails, userData;
+  String user;
 
-  List<String> spUserData;
 
-  String name, id, age;
-
+  String id, name, mobile, age;
   FirebaseAuth _auth = FirebaseAuth.instance;
 
-  final _editProfileFormKey = GlobalKey<FormState>();
-  TextEditingController _editNameController;
-  TextEditingController _editAgeController = new TextEditingController();
-
-  void initState(){
+  @override
+  initState() {
     super.initState();
-    _editNameController = new TextEditingController(text: widget.name??null);
-    _editAgeController = new TextEditingController(text:  widget.age??null);
 
-
-
-
-    // getspUserData();
-    // if(spUserData!=null){
-    //   _editNameController =
-    //   _editNameController = new TextEditingController(text: spUserData[0]??null);
-    //   _editAgeController = new TextEditingController(text:  spUserData[1]??null);
-    // }else{
-    //   _editNameController =  new TextEditingController();
-    //   _editAgeController = new TextEditingController();
-    // }
-
+    setUserDetails();
+    setSignIn();
+    getUserData();
+    fetchData();
   }
 
-  void getspUserData()async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    spUserData = prefs.getStringList('UserDetails');
-
-  }
-
-  String numberValidator(String value) {
-    if (value == null) {
-      return null;
-    }
-    final n = num.tryParse(value);
-    if (n == null) {
-      return '$value is not a valid number';
-    }
-    return null;
-  }
-
-  void addData() async {
-    await _auth.currentUser().then((value) async {
-      uid = value.uid;
-      if (_editProfileFormKey.currentState.validate()) {
-        id = uid;
-        name = _editNameController.text;
-        // mobile = controllerMobile.text;
-        age = _editAgeController.text;
-
-        FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
-        DatabaseReference databaseReference = FirebaseDatabase.reference as DatabaseReference<ReferenceJsImpl>;
-        databaseReference
-            .child("users")
-            .child(id)
-            .set({'name': name, 'age': age});
-        userData = [name, age];
-      }
+  void setUserDetails(){
+    setState(() {
+      user = widget.user;
+      id = widget.uid;
+//      userDetails = widget.userDetails;
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: pageAppBar('Edit Profile'),
-        body: Builder(builder: _editProfile));
+
+
+//  Data() async {
+//    FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
+//
+//    final prefs = await SharedPreferences.getInstance();
+//    setState(() {
+//
+//    }
+//    );
+//  }
+
+  void fetchData() async {
+//    user = await _auth.currentUser();
+  user = widget.user;
+    id = widget.uid;
+
+    FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
+    DatabaseReference databaseReference =
+    firebaseDatabase.reference().child('users').child(id);
+    databaseReference.once().then((DataSnapshot dataSnapshot) {
+      setState(() {
+        name = dataSnapshot.value['name'];
+        // mobile = dataSnapshot.value['mobile'];
+        age = dataSnapshot.value['age'];
+      });
+    });
   }
 
-  Form _editProfile(BuildContext context) {
-    return Form(
-        key: _editProfileFormKey,
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: ListView(
+  void setSignIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      prefs.setBool('isSignIn', true);
+      prefs.setStringList('UserDetails', [widget.uid,widget.user]);
+    });
+  }
+
+  void getUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userData = prefs.getStringList('UserData') ?? null;
+    });
+
+    if (userData == null) {
+      setState(() {
+        userData = ['your name', 'your age'];
+      });
+    }
+  }
+
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Profile Page"),),
+        body: Container(
+          padding: EdgeInsets.all(12),
+
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              TextFormField(
-                controller: _editNameController,
-                validator: (String content) {
+              Expanded(
+                child: Container(
 
-                  if (content.length == 0) {
-                    return 'Please enter your Name';
-                  } else {
-                    return null;
-                  }
 
-                },
-                decoration: InputDecoration(
-                    labelText: "Name",
-                    hintText: "Enter your Name",
-                    border: OutlineInputBorder()),
+                  child: Text(
+                    'Profile Page',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              Expanded(
+
+                child: Card(
+                  color: Colors.blueAccent,
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      children: <Widget>[
+                        SizedBox(
+                          height: 10,
+                        ),
+                        //Image.asset('assets/images.1.png'),
+                        SizedBox(
+                          height: 35,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Container(
+
+                              child: Text(
+                                'Email:',
+
+                              ),
+                            ),
+                            Flexible(
+                              child: Text(
+                                widget.user ?? 'Enter your email',
+
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Container(
+                              width: 75,
+                              child: Text(
+                                'Name:',
+
+                              ),
+                            ),
+                            Flexible(
+                              child: Text(
+                                name ?? 'your name..',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    color: Color(0xff2b2d42),
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Container(
+                              width: 75,
+                              child: Text(
+                                'Age:',
+
+                              ),
+                            ),
+                            Flexible(
+                              child: Text(
+                                age ?? 'Enter age...',
+
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
               SizedBox(
-                height: 16,
+                height: 20,
               ),
-              TextFormField(
-                controller: _editAgeController,
-                keyboardType: TextInputType.number,
-                validator: numberValidator,
-                inputFormatters: <TextInputFormatter>[
-                  WhitelistingTextInputFormatter.digitsOnly
+              Row(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      RaisedButton(
+                        color: Colors.blue,
+                        padding: EdgeInsets.symmetric(),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => EditProfile(id: widget.uid,))
+
+                          ).then((_){
+                            setState(() {
+                              fetchData();
+                            });
+                          });
+                        },
+                        child: const Text(
+                          'Edit Profile',
+
+                        ),
+                      ),
+
+                    ],
+                  ),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      RaisedButton(
+                        color: Colors.blueAccent,
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 45, vertical: 15),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => WidgetHomePage()),
+                          );
+                        },
+                        child: const Text(
+                          'Widgets',
+
+                        ),
+                      ),
+
+                    ],
+                  ),
                 ],
-                decoration: InputDecoration(
-                    labelText: "Age",
-                    hintText: "Enter your Age",
-                    border: OutlineInputBorder()),
               ),
-              SizedBox(
-                height: 16,
+              Divider(
+                endIndent: 10,
+                indent: 10,
+                height: 30,
+                thickness: 5,
+                color: Colors.black,
               ),
-              formButton(context,
-                  iconData: Icons.edit,
-                  textData: 'Save Changes', onPressed: () async {
-                    if (_editProfileFormKey.currentState.validate()) {
-                      addData();
-                      SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                      prefs.setStringList('UserData', userData);
-                      Navigator.pop(context,
-                          // userData!=null??
-                          'Details Saved'
-                        // (){
-                        //   setState(() {
-                        //     // Scaffold.of(context).showSnackBar(SnackBar(content: Text("Details Saved")));
-                        //   });
-                        // }
-                      );
-                    }else{
-                      Scaffold.of(context).showSnackBar(SnackBar(content: Text("Something went wrong")));
-                    }
-                  })
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: RaisedButton(
+                      color: Colors.lightBlueAccent,
+                      padding: EdgeInsets.symmetric(),
+
+
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        prefs.clear();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                        );
+                      },
+
+                      child: const Text(
+                        'Log Out',
+
+                      ),
+
+                    ),
+                  ),
+                ],
+              ),
+
             ],
           ),
-        ));
-  }
-}
+        ),
+      );
+    }
 
-class FirebaseDatabase {
-
-  static FirebaseDatabase instance;
-  static FirebaseDatabase reference;
 }

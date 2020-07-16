@@ -6,6 +6,8 @@ import"package:login_app/googlesigninbutton.dart";
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_app/registeration page.dart';
 import 'package:login_app/forgotpassword.dart';
+import 'package:login_app/profilepage.dart';
+import 'package:login_app/edit.dart';
 
 void main() => runApp(new MyApp());
 class MyApp extends StatelessWidget {
@@ -29,7 +31,14 @@ class LoginPageState extends State<LoginPage> {
   String _email;
   String _password;
   final formKey= new GlobalKey<FormState>();
-  List<String> userDetails;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final userController = TextEditingController();
+  final passController = TextEditingController();
+
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+//  Future<List <dynamic>> userDetails;
+  List<dynamic> userDetails;
   List loginDetails;
   FirebaseUser user;
   void validateAndSave(){
@@ -102,7 +111,8 @@ class LoginPageState extends State<LoginPage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>
                       [  new TextFormField(
-                          decoration: new InputDecoration(labelText: "enter email"),
+                          controller: userController,
+                          decoration: new InputDecoration(labelText: "Enter Email"),
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) =>value.isEmpty?'email':null,
                             onSaved:(value)=>_email=value,
@@ -111,8 +121,9 @@ class LoginPageState extends State<LoginPage> {
                         Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: new TextFormField(
+                            controller: passController,
                             decoration:
-                            new InputDecoration(labelText: "enter password"),
+                            new InputDecoration(labelText: "Enter Password"),
                             keyboardType: TextInputType.text,
                             obscureText: true,
                               validator: (value) =>value.isEmpty?'password':null,
@@ -122,38 +133,29 @@ class LoginPageState extends State<LoginPage> {
                         new Padding(
                           padding: const EdgeInsets.all(20.0),
                         ),
-                        new MaterialButton(
-                          color: Colors.teal,
-                          textColor: Colors.white,
-                          child: new Text("login"),
-                          onPressed: validateAndSave,
-                        ),
-                     
-                        signInButton(() async {
-                          final prefs = await SharedPreferences.getInstance();
-                          await handleSignIn().then((value) {
-                            setState(() {
-                              user = value;
-                              userDetails = [user.uid, user.email];
-                            });
-                            print(userDetails);
-                            // LocalStorage().saveUserDetails(userDetails);
-                            prefs.setStringList('UserDetails', userDetails);
+                        new RaisedButton(
+                            color: Colors.teal,
+                            textColor: Colors.white,
+                            child: new Text("Login"),
+                            onPressed:  ()async {
+                                             print(userController.text + passController.text);
+    //TEST CODE
+                                             FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+                                                  AuthResult authResult = await _firebaseAuth
+                                                  .signInWithEmailAndPassword(email: userController
+                                                  .text, password: passController.text);
+                                                  FirebaseUser user = authResult.user;
+                                                  if (user == null) {return;}
+                               else     {
+                                    Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => Profile(uid: (authResult.user.uid).toString(),user: (authResult.user.email).toString(),)
+                                    ),
+                                    );
+                                    }}
+                                                  ),
 
-                            // userDetails = await signInWithGoogle().whenComplete(() {
-                            print("userDetails are as $userDetails");
-                            print("Logged in successfully");
 
-
-
-//                            Navigator.pushReplacement(
-//                                context,
-//                                MaterialPageRoute(
-//                                    builder: (context) => LoginPage(
-//                                      userDetails: userDetails,
-//                                    )));
-                          });
-                        }),
                     new RaisedButton(
                     color: Colors.teal,
                     textColor: Colors.white,
@@ -161,7 +163,8 @@ class LoginPageState extends State<LoginPage> {
                     onPressed:  (){
                     Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => RegisterPage()),
+                    MaterialPageRoute(builder: (context) => RegisterPage(),
+                                                  ),
                     );
                     }
                     ),
@@ -177,6 +180,18 @@ class LoginPageState extends State<LoginPage> {
                               );
                             }
                         ),
+                        new RaisedButton(
+                            color: Colors.teal,
+                            textColor: Colors.white,
+                            child: new Text("google signin"),
+                            onPressed:  ()async{userDetails= await signInWithGoogle();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => Profile(uid:userDetails[0],user: userDetails[1],),
+                                ),
+                              );
+                            }
+                        ),
 
                       ],
 
@@ -185,8 +200,5 @@ class LoginPageState extends State<LoginPage> {
                 ],
               ),
             );
-
-
-
-  }
+ }
 }
