@@ -4,11 +4,12 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import"package:login_app/googlesigninbutton.dart";
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:login_app/registeration page.dart';
+import 'package:login_app/registerationpage.dart';
 import 'package:login_app/forgotpassword.dart';
 import 'package:login_app/profilepage.dart';
 import 'package:login_app/edit.dart';
 
+this is master branch
 void main() => runApp(new MyApp());
 class MyApp extends StatelessWidget {
 
