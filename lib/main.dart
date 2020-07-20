@@ -9,7 +9,6 @@ import 'package:login_app/forgotpassword.dart';
 import 'package:login_app/profilepage.dart';
 import 'package:login_app/edit.dart';
 
-this is master branch
 void main() => runApp(new MyApp());
 class MyApp extends StatelessWidget {
 
