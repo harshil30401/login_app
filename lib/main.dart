@@ -1,14 +1,11 @@
 
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import"package:login_app/googlesigninbutton.dart";
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_app/registerationpage.dart';
 import 'package:login_app/forgotpassword.dart';
 import 'package:login_app/profilepage.dart';
-import 'package:login_app/edit.dart';
-
+import 'package:login_app/shared/loading.dart';
 void main() => runApp(new MyApp());
 class MyApp extends StatelessWidget {
 
@@ -30,10 +27,12 @@ class LoginPage extends StatefulWidget {
 class LoginPageState extends State<LoginPage> {
   String _email;
   String _password;
+  set error(String error) {}
   final formKey= new GlobalKey<FormState>();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final userController = TextEditingController();
   final passController = TextEditingController();
+  bool loading = false;
 
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -41,6 +40,8 @@ class LoginPageState extends State<LoginPage> {
   List<dynamic> userDetails;
   List loginDetails;
   FirebaseUser user;
+
+  
   void validateAndSave(){
    final form=formKey.currentState;
    if(form.validate()){
@@ -86,8 +87,8 @@ class LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return new Scaffold(
-      appBar: AppBar(title: Text("Home Page"),),
+    return loading ? Loading() : Scaffold(
+      appBar: AppBar(title: Text("Welcome"),),
 //        backgroundColor: Colors.green,
 //        body: new Stack(
 //            fit: StackFit.expand,
@@ -102,8 +103,8 @@ class LoginPageState extends State<LoginPage> {
         body:      new ListView(
 //                mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  new FlutterLogo(
-                    size: 100.0,
+                  Image(
+                    image: AssetImage("assets/user.jpg"),
                   ),
                   new Form(
 
@@ -131,38 +132,47 @@ class LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         new Padding(
-                          padding: const EdgeInsets.all(20.0),
+                          padding: const EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0)
                         ),
                         new RaisedButton(
-                            color: Colors.teal,
+                            color: Colors.amberAccent,
                             textColor: Colors.white,
                             child: new Text("Login"),
                             onPressed:  ()async {
                                              print(userController.text + passController.text);
-    //TEST CODE
+                                             setState(()=> loading = true);
+    
                                              FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
                                                   AuthResult authResult = await _firebaseAuth
                                                   .signInWithEmailAndPassword(email: userController
                                                   .text, password: passController.text);
                                                   FirebaseUser user = authResult.user;
-                                                  if (user == null) {return;}
-                               else     {
+                                                  if (user == null) {
+                                                    setState(() {
+                                                       error = "Couldn't sign in";
+                                                      loading = false;
+                                                    
+                                                    
+                                                    });
+                                                    
+                               else   {
                                     Navigator.push(
                                     context,
                                     MaterialPageRoute(builder: (context) => Profile(uid: (authResult.user.uid).toString(),user: (authResult.user.email).toString(),)
                                     ),
                                     );
                                     }}
-                                                  ),
+                            },),
 
 
                     new RaisedButton(
                     color: Colors.teal,
                     textColor: Colors.white,
-                    child: new Text("Newuser"),
+                    child: new Text("Make an account"),
                     onPressed:  (){
                     Navigator.push(
                     context,
+                    
                     MaterialPageRoute(builder: (context) => RegisterPage(),
                                                   ),
                     );
@@ -172,7 +182,7 @@ class LoginPageState extends State<LoginPage> {
                         new RaisedButton(
                             color: Colors.teal,
                             textColor: Colors.white,
-                            child: new Text("forgotpassword"),
+                            child: new Text("forgot password"),
                             onPressed:  (){
                               Navigator.push(
                                 context,
@@ -183,7 +193,7 @@ class LoginPageState extends State<LoginPage> {
                         new RaisedButton(
                             color: Colors.teal,
                             textColor: Colors.white,
-                            child: new Text("google signin"),
+                            child: new Text("google sign in"),
                             onPressed:  ()async{userDetails= await signInWithGoogle();
                               Navigator.push(
                                 context,

@@ -52,7 +52,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: pageAppBar("Register Page"),
+        appBar: pageAppBar("Make an account"),
         body: Builder(
           builder: _registerPageForm,
         ));
@@ -96,7 +96,7 @@ class _RegisterPageState extends State<RegisterPage> {
               },
               decoration: InputDecoration(
                   labelText: "Email ID",
-                  hintText: "Enter your Email ID",
+                  hintText: "Enter your Email ID here",
                   border: OutlineInputBorder()),
             ),
             SizedBox(
@@ -114,7 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
               },
               decoration: InputDecoration(
                 labelText: "Enter Password",
-                hintText: "Enter Your Password",
+                hintText: "Enter Your Password Here",
                 border: OutlineInputBorder(),
               ),
             ),
@@ -129,7 +129,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   return 'Minimum 8 DIGIT password';
                 } else if (_passwordRegisterPageController2.text !=
                     _passwordRegisterPageController1.text) {
-                  return 'Password not match';
+                  return 'Passwords not match';
                 } else {
                   return null;
                 }
@@ -150,7 +150,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     try {
                       _registerFormKey.currentState.save();
                       createUserWithEmail(_emailRegisterPageController.text, _passwordRegisterPageController1.text).then((_){
-                        print("Registered successful");
+                        print("Registered successfully!");
                         Navigator.pop(context);
                       });
                     } catch(e){

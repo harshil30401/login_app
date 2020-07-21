@@ -2,9 +2,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:login_app/profilepage.dart';
-
 import 'package:login_app/main.dart';
+
 class EditProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
