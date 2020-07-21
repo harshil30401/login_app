@@ -11,7 +11,7 @@ class EditProfilePage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Edit Profile"),
       ),
-      body: EditProfile(),
+      body: EditProfile(id: null,),
     );
   }
 }
